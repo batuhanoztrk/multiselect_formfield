@@ -17,19 +17,23 @@ class MultiSelectDialog<V> extends StatefulWidget {
   final ShapeBorder? dialogShapeBorder;
   final Color? checkBoxCheckColor;
   final Color? checkBoxActiveColor;
+  final Color? cancelButtonTextColor;
+  final Color? okButtonTextColor;
 
-  MultiSelectDialog(
-      {Key? key,
-      this.items,
-      this.initialSelectedValues,
-      this.title,
-      this.okButtonLabel,
-      this.cancelButtonLabel,
-      this.labelStyle = const TextStyle(),
-      this.dialogShapeBorder,
-      this.checkBoxActiveColor,
-      this.checkBoxCheckColor})
-      : super(key: key);
+  MultiSelectDialog({
+    Key? key,
+    this.items,
+    this.initialSelectedValues,
+    this.title,
+    this.okButtonLabel,
+    this.cancelButtonLabel,
+    this.labelStyle = const TextStyle(),
+    this.dialogShapeBorder,
+    this.checkBoxActiveColor,
+    this.checkBoxCheckColor,
+    this.cancelButtonTextColor = Colors.blue,
+    this.okButtonTextColor = Colors.blue,
+  }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _MultiSelectDialogState<V>();
@@ -79,11 +83,21 @@ class _MultiSelectDialogState<V> extends State<MultiSelectDialog<V>> {
       ),
       actions: <Widget>[
         TextButton(
-          child: Text(widget.cancelButtonLabel!),
+          child: Text(
+            widget.cancelButtonLabel!,
+            style: TextStyle(
+              color: widget.cancelButtonTextColor,
+            ),
+          ),
           onPressed: _onCancelTap,
         ),
         TextButton(
-          child: Text(widget.okButtonLabel!),
+          child: Text(
+            widget.okButtonLabel!,
+            style: TextStyle(
+              color: widget.okButtonTextColor,
+            ),
+          ),
           onPressed: _onSubmitTap,
         )
       ],
