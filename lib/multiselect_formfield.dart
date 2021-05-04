@@ -20,6 +20,9 @@ class MultiSelectFormField extends FormField<dynamic> {
   final String cancelButtonLabel;
   final Color? fillColor;
   final InputBorder? border;
+  final InputBorder? enabledBorder;
+  final InputBorder? focusedBorder;
+  final InputBorder? errorBorder;
   final TextStyle? chipLabelStyle;
   final Color? chipBackGroundColor;
   final TextStyle dialogTextStyle;
@@ -27,6 +30,14 @@ class MultiSelectFormField extends FormField<dynamic> {
   final Color? checkBoxCheckColor;
   final Color? checkBoxActiveColor;
   final bool enabled;
+  final Radius borderRadius;
+  final EdgeInsetsGeometry? contentPadding;
+  final Color? cancelButtonTextColor;
+  final Color? okButtonTextColor;
+  final Color? iconColor;
+  final Color? selectedItemsFillColor;
+  final Decoration? selectedItemsDecoration;
+  final EdgeInsetsGeometry? selectedItemsPadding;
 
   MultiSelectFormField({
     FormFieldSetter<dynamic>? onSaved,
@@ -58,6 +69,17 @@ class MultiSelectFormField extends FormField<dynamic> {
     ),
     this.checkBoxActiveColor,
     this.checkBoxCheckColor,
+    this.enabledBorder,
+    this.focusedBorder,
+    this.errorBorder,
+    this.borderRadius = Radius.zero,
+    this.contentPadding = EdgeInsets.zero,
+    this.okButtonTextColor,
+    this.cancelButtonTextColor,
+    this.iconColor = Colors.black87,
+    this.selectedItemsFillColor = Colors.transparent,
+    this.selectedItemsDecoration,
+    this.selectedItemsPadding = EdgeInsets.zero,
   }) : super(
           onSaved: onSaved,
           validator: validator,
@@ -69,7 +91,8 @@ class MultiSelectFormField extends FormField<dynamic> {
 
               if (state.value != null) {
                 state.value.forEach((item) {
-                  var existingItem = dataSource!.singleWhere(((itm) => itm[valueField] == item),
+                  var existingItem = dataSource!.singleWhere(
+                      ((itm) => itm[valueField] == item),
                       orElse: () => null);
                   selectedOptions.add(Chip(
                     labelStyle: chipLabelStyle,
@@ -86,48 +109,73 @@ class MultiSelectFormField extends FormField<dynamic> {
             }
 
             return InkWell(
+              onTap: !enabled
+                  ? null
+                  : () async {
+                      List? initialSelected = state.value;
+                      if (initialSelected == null) {
+                        initialSelected = [];
+                      }
 
-              onTap:  !enabled ? null :() async {
-                List? initialSelected = state.value;
-                if (initialSelected == null) {
-                  initialSelected = [];
-                }
-
-                final items = <MultiSelectDialogItem<dynamic>>[];
+                      final items = <MultiSelectDialogItem<dynamic>>[];
                       dataSource!.forEach((item) {
-                  items.add(
-                      MultiSelectDialogItem(item[valueField], item[textField]));
-                });
+                        items.add(MultiSelectDialogItem(
+                            item[valueField], item[textField]));
+                      });
 
-                List? selectedValues = await showDialog<List>(
-                  context: state.context,
-                  builder: (BuildContext context) {
-                    return MultiSelectDialog(
-                      title: title,
-                      okButtonLabel: okButtonLabel,
-                      cancelButtonLabel: cancelButtonLabel,
-                      items: items,
-                      initialSelectedValues: initialSelected,
-                      labelStyle: dialogTextStyle,
-                      dialogShapeBorder: dialogShapeBorder,
-                      checkBoxActiveColor: checkBoxActiveColor,
-                      checkBoxCheckColor: checkBoxCheckColor,
-                    );
-                  },
-                );
+                      List? selectedValues = await showDialog<List>(
+                        context: state.context,
+                        builder: (BuildContext context) {
+                          return MultiSelectDialog(
+                            title: title,
+                            okButtonLabel: okButtonLabel,
+                            cancelButtonLabel: cancelButtonLabel,
+                            items: items,
+                            initialSelectedValues: initialSelected,
+                            labelStyle: dialogTextStyle,
+                            dialogShapeBorder: dialogShapeBorder,
+                            checkBoxActiveColor: checkBoxActiveColor,
+                            checkBoxCheckColor: checkBoxCheckColor,
+                            okButtonTextColor: okButtonTextColor,
+                            cancelButtonTextColor: cancelButtonTextColor,
+                          );
+                        },
+                      );
 
-                if (selectedValues != null) {
-                  state.didChange(selectedValues);
-                  state.save();
-                }
-              },
+                      if (selectedValues != null) {
+                        state.didChange(selectedValues);
+                        state.save();
+                      }
+                    },
               child: InputDecorator(
                 decoration: InputDecoration(
                   filled: true,
                   errorText: state.hasError ? state.errorText : null,
                   errorMaxLines: 4,
                   fillColor: fillColor ?? Theme.of(state.context).canvasColor,
-                  border: border ?? UnderlineInputBorder(),
+                  contentPadding: contentPadding,
+                  border: border ??
+                      OutlineInputBorder(
+                        borderRadius: BorderRadius.all(borderRadius),
+                        borderSide: BorderSide(color: Colors.transparent),
+                      ),
+                  focusedBorder: focusedBorder ??
+                      OutlineInputBorder(
+                        borderRadius: BorderRadius.all(borderRadius),
+                        borderSide: BorderSide(color: Colors.transparent),
+                      ),
+                  enabledBorder: enabledBorder ??
+                      OutlineInputBorder(
+                        borderRadius: BorderRadius.all(borderRadius),
+                        borderSide: BorderSide(color: Colors.transparent),
+                      ),
+                  errorBorder: errorBorder ??
+                      OutlineInputBorder(
+                        borderRadius: BorderRadius.all(borderRadius),
+                        borderSide: BorderSide(
+                          color: Colors.red,
+                        ),
+                      ),
                 ),
                 isEmpty: state.value == null || state.value == '',
                 child: Column(
@@ -155,22 +203,34 @@ class MultiSelectFormField extends FormField<dynamic> {
                               : Container(),
                           Icon(
                             Icons.arrow_drop_down,
-                            color: Colors.black87,
+                            color: iconColor,
                             size: 25.0,
                           ),
                         ],
                       ),
                     ),
-                    state.value != null && state.value.length > 0
-                        ? Wrap(
-                            spacing: 8.0,
-                            runSpacing: 0.0,
-                            children: _buildSelectedOptions(state),
-                          )
-                        : new Container(
-                            padding: EdgeInsets.only(top: 4),
-                            child: hintWidget,
-                          )
+                    Container(
+                      width: double.infinity,
+                      padding: (hintWidget != null ||
+                              (state.value != null && state.value.length > 0))
+                          ? selectedItemsPadding
+                          : EdgeInsets.zero,
+                      decoration: selectedItemsDecoration ??
+                          BoxDecoration(
+                            color: selectedItemsFillColor,
+                          ),
+                      child: state.value != null && state.value.length > 0
+                          ? Wrap(
+                              spacing: 8.0,
+                              runSpacing: 0.0,
+                              children: _buildSelectedOptions(state),
+                            )
+                          : new Container(
+                              padding: EdgeInsets.only(
+                                  top: hintWidget != null ? 4 : 0),
+                              child: hintWidget,
+                            ),
+                    ),
                   ],
                 ),
               ),
